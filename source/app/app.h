@@ -4,14 +4,10 @@
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
-#include "app/app.h"
-#include "ui/ui.h"
-#include "ui/input.h"
+#ifndef __APP_H__
+#define __APP_H__
 
-int main(int argc, char *argv[]) 
-{
-	ui_init();
-	input_init();
-	app_run();
-	return 0;
-}
+// runs the dumper, only returns on allocation failure
+void app_run(void);
+
+#endif
