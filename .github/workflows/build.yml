@@ -1,11 +1,12 @@
 # Runs the host tests and builds both dols on every push and pull request.
-# On master it also publishes a GitHub release with the dols when the version
-# in common/version.h hasn't been released yet.
+# Pushing a version tag (e.g. v1.9, matching common/version.h) also publishes
+# a GitHub release of that commit with both dols.
 name: Build
 
 on:
   push:
     branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -71,8 +72,8 @@ jobs:
 
   release:
     needs: build
-    # only master of this repo, not forks or the Gitea mirror
-    if: github.ref == 'refs/heads/master' && github.repository == 'tvmadlad/gba-link-cable-dumper'
+    # only version tags on this repo, not forks or the Gitea mirror
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'tvmadlad/gba-link-cable-dumper'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -90,8 +91,13 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
           TOOLCHAIN: ${{ needs.build.outputs.toolchain }}
         run: |
+          # the dol names come from version.h, so a mismatched tag would mislabel them
+          if [ "$GITHUB_REF_NAME" != "$VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match the version in common/version.h ($VERSION)."
+            exit 1
+          fi
           if gh release view "$VERSION" > /dev/null 2>&1; then
-            echo "::notice::$VERSION is already released. Bump the version in common/version.h to publish a new release."
+            echo "::notice::$VERSION is already released."
             exit 0
           fi
           notes=$(cat <<EOF
@@ -104,7 +110,6 @@ jobs:
           EOF
           )
           gh release create "$VERSION" dist/*.dol \
-            --target "$GITHUB_SHA" \
             --title "$VERSION" \
             --notes "$notes" \
             --generate-notes
