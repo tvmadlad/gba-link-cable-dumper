@@ -26,6 +26,7 @@ make screens        # render the GBA payload screens to tests/build/screens/*.pn
 - There's no hardware or emulator testing here. The GBA link cable can't be emulated, so say clearly that a change is untested on hardware. When refactoring the GBA side, compare `gba/gba_mb.gba` against the previous build to confirm it's byte-identical when no behaviour change is intended.
 
 - Versioning: bump `VERSION_MINOR` (or `VERSION_MAJOR`) in `common/version.h` only. The code builds `APP_VERSION` ("v1.7") from it and the Makefiles read it for the output file names. Keep the two `#define VERSION_*` lines in that exact form, since the Makefiles and CI parse them with `sed`. Releases are only published from tags: pushing a `v<major>.<minor>` tag that matches `common/version.h` makes CI build that commit and publish the release with both dols. Pushes to master only build and test.
+- `make dist` packages `dist/gba-link-cable-dumper-v<version>.zip` locally (GameCube dol, Wii `apps/gbadumper/` with `boot.dol` + `meta.xml` from `dist_files/meta.xml.in`, README, LICENSE). The CI release publishes the dols from the tag.
 
 ## Layout and rules
 
@@ -57,7 +58,7 @@ gba/source/         GBA payload (main.c) and libSave (save chip access)
 ## Code style
 
 - C, tabs for indentation, braces on their own line, `lower_snake_case` for new functions, prefixed by module (`gba_`, `si_link_`, `storage_`, `paths_`, `ui_`, `input_`)
-- Every source file starts with the FIX94 MIT license header used in the existing files
+- Every source file starts with the MIT license header. Files containing FIX94's original code keep "Copyright (C) 2016 FIX94"; files written from scratch in this fork use "Copyright (C) 2026 tvmadlad" (see e.g. `source/settings/settings.c`). Don't change the owner of files derived from FIX94's code.
 - Header guards look like `__MODULE_H__`
 - Short `//` comments, only where the reason isn't obvious
 

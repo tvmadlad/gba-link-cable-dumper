@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 tvmadlad, MIT license, see LICENSE
 # Renders dumps from test_gba_screen (mode 0 BG0, 4bpp tiles in charblock 0, map in screenblock 4) to 3x scaled PNGs.
 # No dependencies, writes the PNG itself.
 import sys, struct, zlib

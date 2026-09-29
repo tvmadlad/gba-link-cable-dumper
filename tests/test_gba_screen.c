@@ -1,4 +1,10 @@
 /*
+ * Copyright (C) 2026 tvmadlad
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+/*
  * Host tests for the GBA payload screen (gba/source/screen.c).
  * Builds the real source against tests/gba_stub, with VRAM and the palette
  * as plain arrays. Checks the progress bar maths and, when run with an
