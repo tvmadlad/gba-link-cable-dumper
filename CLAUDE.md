@@ -59,4 +59,5 @@ gba/source/         GBA payload (main.c) and libSave (save chip access)
 ## Git
 
 - Branch for each feature, merge into `master` with `--no-ff`
-- Push to the **`gitea`** remote (a private Gitea mirror). `origin` is FIX94's upstream GitHub repo, so never push there.
+- Push to the **`github`** remote (the public repo) and the **`gitea`** remote (private mirror). `origin` is FIX94's upstream repo, so never push there.
+- The repo is public. Don't commit local network addresses, credentials or personal paths.
