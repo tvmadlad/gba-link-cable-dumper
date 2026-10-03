@@ -57,6 +57,35 @@ static void show_idle_controls(void)
 	screen_controls("A: read cartridge", "SELECT: dump BIOS");
 }
 
+//---------------------------------------------------------------------------------
+// a finished transfer stays on screen until a GBA button is pressed
+//---------------------------------------------------------------------------------
+static bool result_shown = false;
+
+static void show_result(const char *msg)
+{
+	screen_status_line(msg);
+	result_shown = true;
+}
+
+// back to the first boot screen, the game info stays as the last game
+static void show_ready(void)
+{
+	result_shown = false;
+	screen_status("Ready");
+	screen_cart_last();
+	show_idle_controls();
+}
+
+// after a command, either wait for the result to be dismissed or go back to ready
+static void finish_command(void)
+{
+	if(result_shown)
+		screen_controls(NULL, "Press any button to continue");
+	else
+		show_ready();
+}
+
 static void show_cart_controls(u32 savesize)
 {
 	if(savesize > 0)
@@ -157,12 +186,12 @@ int main(void) {
 			//the gc took our request, it acts on it next and may refuse it,
 			//so go back to ready until its command arrives
 			ack_request();
-			screen_status("Ready");
-			show_idle_controls();
+			show_ready();
 		}
 		else if(REG_HS_CTRL&JOY_READ)
 		{
 			REG_HS_CTRL |= JOY_RW;
+			result_shown = false;
 			screen_status("Reading cartridge...");
 			screen_controls(NULL, NULL);
 			s32 gamesize = getGameSize();
@@ -216,8 +245,7 @@ int main(void) {
 			if(choseval == GBA_CMD_NONE)
 			{
 				REG_JOYTR = 0;
-				screen_status("Ready");
-				show_idle_controls();
+				show_ready();
 				continue; //nothing to read
 			}
 			else if(choseval == GBA_CMD_DUMP_ROM)
@@ -240,7 +268,7 @@ int main(void) {
 				//restore interrupts
 				REG_IME = prevIrqMask;
 				progress_finish(&progress);
-				screen_status_line("ROM dumped!");
+				show_result("ROM dumped!");
 			}
 			else if(choseval == GBA_CMD_BACKUP_SAVE)
 			{
@@ -287,7 +315,7 @@ int main(void) {
 					REG_HS_CTRL |= JOY_RW;
 				}
 				progress_finish(&progress);
-				screen_status_line("Save backed up!");
+				show_result("Save backed up!");
 			}
 			else if(choseval == GBA_CMD_RESTORE_SAVE || choseval == GBA_CMD_CLEAR_SAVE)
 			{
@@ -345,7 +373,7 @@ int main(void) {
 				}
 				//restore interrupts
 				REG_IME = prevIrqMask;
-				screen_status_line(choseval == GBA_CMD_RESTORE_SAVE ? "Save restored!" : "Save cleared!");
+				show_result(choseval == GBA_CMD_RESTORE_SAVE ? "Save restored!" : "Save cleared!");
 				//say gc side we're done
 				REG_JOYTR = 0;
 				//wait for a cmd receive for safety
@@ -353,10 +381,11 @@ int main(void) {
 				REG_HS_CTRL |= JOY_RW;
 			}
 			REG_JOYTR = 0;
-			show_idle_controls();
+			finish_command();
 		}
 		else if(REG_HS_CTRL&JOY_WRITE)
 		{
+			result_shown = false;
 			//a command from the gc wins over a request we posted meanwhile
 			if(request_posted)
 				clear_request();
@@ -386,16 +415,22 @@ int main(void) {
 				//restore interrupts
 				REG_IME = prevIrqMask;
 				progress_finish(&progress);
-				screen_status_line("BIOS dumped!");
+				show_result("BIOS dumped!");
 			}
 			REG_JOYTR = 0;
-			show_idle_controls();
+			finish_command();
 		}
 		else if(!request_posted)
 		{
 			scanKeys();
 			u16 down = keysDown();
-			if(down & KEY_A)
+			if(result_shown)
+			{
+				//this press only dismisses the result
+				if(down)
+					show_ready();
+			}
+			else if(down & KEY_A)
 				post_request(GBA_REQ_READ_CART, "Waiting for the GameCube...");
 			else if(down & KEY_SELECT)
 				post_request(GBA_REQ_DUMP_BIOS, "Waiting for the GameCube...");

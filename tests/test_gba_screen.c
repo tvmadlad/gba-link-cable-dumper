@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	screen_status("Press SELECT again to clear"); dump("2b_confirm.bin");
 	screen_controls(NULL, NULL);
 	u16 *map = (u16*)(fake_vram + 4*0x800);
-	CHECK((map[5*32+2] & 0xFF) == 'T' && (map[5*32+9] & 0xFF) == 'P');
+	CHECK((map[6*32+2] & 0xFF) == 'T' && (map[6*32+9] & 0xFF) == 'P');
 
 	u32 total = 16<<20, i;
 	screen_status("Dumping ROM...");
@@ -93,16 +93,25 @@ int main(int argc, char *argv[])
 	dump("3_rom_45.bin");
 	CHECK(pct_of(&p) == 44 && p.cells == 11);
 	for(; i < total; i += 4) progress_update(&p, i+4);
-	progress_finish(&p); screen_status_line("ROM dumped!"); dump("4_rom_done.bin");
+	progress_finish(&p); screen_status_line("ROM dumped!");
+	screen_controls(NULL, "Press any button to continue"); dump("4_rom_done.bin");
 	CHECK((map[14*32+2] & 0xFF) == 1 && (map[14*32+27] & 0xFF) == 1);
+	CHECK((map[4*32+2] & 0xFF) == 'C');		// "Cartridge:" heading
+
+	// dismissed with a button: ready again, bar gone, info kept as the last game
+	screen_status("Ready"); screen_cart_last(); screen_controls("A: read cartridge", "SELECT: dump BIOS");
+	dump("4b_last_game.bin");
+	CHECK((map[4*32+2] & 0xFF) == 'L' && (map[6*32+9] & 0xFF) == 'P');
+	CHECK((map[14*32+2] & 0xFF) == ' ');
 
 	// every save size, the BIOS and the smallest and largest ROM
 	u32 sizes[] = { 0x200, 0x2000, 0x4000, 0x8000, 0x10000, 0x20000, 1<<20, 32<<20 };
 	for(unsigned k = 0; k < sizeof(sizes)/sizeof(sizes[0]); k++)
 		check_size(sizes[k]);
 
-	screen_cart(NULL, -1, 0); screen_status("Ready"); screen_controls("A: read cartridge", "SELECT: dump BIOS"); dump("5_no_cart.bin");
+	screen_cart(NULL, -1, 0); screen_cart_last(); screen_status("Ready"); screen_controls("A: read cartridge", "SELECT: dump BIOS"); dump("5_no_cart.bin");
 	CHECK((map[14*32+2] & 0xFF) == ' ');
+	CHECK((map[4*32+2] & 0xFF) == ' ');		// no "Last game:" heading without game info
 
 	printf(fails ? "\n%d FAILED\n" : "\nALL PASSED\n", fails);
 	return fails != 0;

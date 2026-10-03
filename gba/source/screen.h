@@ -14,8 +14,11 @@
 
 void screen_init(void);
 
-// shows the cart header info, pass gamesize -1 for "no cartridge"
+// shows the cart header info under a "Cartridge:" heading,
+// pass gamesize -1 for "no cartridge"
 void screen_cart(const u8 *header, s32 gamesize, u32 savesize);
+// relabels the info shown by screen_cart as "Last game:", if there is any
+void screen_cart_last(void);
 // one line of status text, clears the progress bar
 void screen_status(const char *msg);
 // replaces the status text but keeps the progress bar, e.g. for "Done!"

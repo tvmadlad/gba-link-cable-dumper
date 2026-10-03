@@ -69,7 +69,7 @@ Download the latest `.dol` for your console from the [Releases](../../releases) 
    | Restore the save from the SD card to the cartridge | **X** | **L**, then **L** again to confirm |
    | Clear the save on the cartridge | **Z** | **SELECT**, then **SELECT** again to confirm |
 
-   The GBA shows what it's doing and a progress bar with a percentage for ROM dumps, save transfers and BIOS dumps.
+   The GBA shows what it's doing and a progress bar with a percentage for ROM dumps, save transfers and BIOS dumps. When it finishes, the result stays on the GBA screen until you press any GBA button. The screen then goes back to **Ready** ("A: read cartridge"), and the game's info stays up as **Last game**.
 
 6. Other buttons:
 

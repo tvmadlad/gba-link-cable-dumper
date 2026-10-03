@@ -25,7 +25,8 @@
 #define COLOR_GREEN		RGB5(8,28,8)
 
 #define SCREEN_COLS		30
-#define ROW_INFO		5
+#define ROW_INFO		6
+#define ROW_HEADING		4
 #define ROW_STATUS		12
 #define ROW_BAR			14
 #define ROW_PCT			15
@@ -33,6 +34,9 @@
 #define BAR_COL			2
 #define BAR_CELLS		26
 #define PCT_COL			13
+
+// set while game info from a cart is on screen
+static bool have_cart_info = false;
 
 static inline void put_char(int col, int row, char c)
 {
@@ -106,14 +110,17 @@ static void header_text(char *out, const u8 *src, int n)
 void screen_cart(const u8 *header, s32 gamesize, u32 savesize)
 {
 	int row;
-	for(row = ROW_INFO; row < ROW_INFO+5; row++)
+	for(row = ROW_HEADING; row < ROW_INFO+4; row++)
 		clear_row(row);
 	if(gamesize < 0)
 	{
+		have_cart_info = false;
 		put_line(ROW_INFO, "No cartridge found");
 		put_line(ROW_INFO+2, "Check the cartridge");
 		return;
 	}
+	have_cart_info = true;
+	put_line(ROW_HEADING, "Cartridge:");
 	char title[13], code[5], maker[3];
 	header_text(title, header+0xA0, 12);
 	header_text(code, header+0xAC, 4);
@@ -127,6 +134,12 @@ void screen_cart(const u8 *header, s32 gamesize, u32 savesize)
 	put_line(ROW_INFO+2, line);
 	siprintf(line, "Save:  %s", save_type_name(savesize));
 	put_line(ROW_INFO+3, line);
+}
+
+void screen_cart_last(void)
+{
+	if(have_cart_info)
+		put_line(ROW_HEADING, "Last game:");
 }
 
 void screen_status(const char *msg)

@@ -128,7 +128,7 @@ A menu for browsing everything that has been dumped and using it again.
 
 ## Phase 4: GBA payload improvements 🚧
 
-The program uploaded to the GBA (`gba/source/main.c`) currently just says "Please look at the TV".
+The program uploaded to the GBA (`gba/source/main.c`) originally just said "Please look at the TV".
 
 ### Game info on the GBA screen
 - ✅ When a cart is read, show title, game code, maker, version, ROM size and **detected save type** (from libSave's `SaveSize`)
@@ -138,7 +138,7 @@ The program uploaded to the GBA (`gba/source/main.c`) currently just says "Pleas
 - ✅ Progress bar and percentage during ROM dumps, save backups, save restores and BIOS dumps
 - ✅ The payload already knows the total size, so it doesn't need anything extra from the console
 - ✅ Updated with direct map writes right after each word is loaded (a compare per word, a few tile writes per step, no division or printf in the loop)
-- ✅ "Done" messages when a transfer finishes (ROM dumped!, Save backed up!, …)
+- ✅ "Done" messages when a transfer finishes (ROM dumped!, Save backed up!, …), kept on screen until a GBA button is pressed; then back to Ready with the info relabelled "Last game:" (v2.1)
 - ✅ `make screens` renders the GBA screens to PNG on the Mac for checking layout
 - ✅ Tested on hardware (GameCube + GBA, v1.8)
 - ⬜ Time a 16 MB dump against v1.7 to confirm the bar doesn't slow it down (~24 minutes expected)
