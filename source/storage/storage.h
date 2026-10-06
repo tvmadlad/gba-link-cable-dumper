@@ -15,9 +15,9 @@
 
 typedef struct
 {
-	const char *id;		// mount name and settings value, e.g. "sd2" -> "sd2:/"
-	const char *name;	// shown to the user
-	bool mounted;
+	const char *id;   // mount name and settings value, e.g. "sd2" -> "sd2:/"
+	const char *name; // shown to the user
+	bool        mounted;
 } storage_device;
 
 // mounts every device present on this console, returns false if none mounted

@@ -30,7 +30,7 @@ static u8 *dumpbuf;
 
 static bool write_chunk(const u8 *data, u32 len, void *user)
 {
-	fwrite(data,len,1,(FILE*)user);
+	fwrite(data, len, 1, (FILE *)user);
 	return true;
 }
 
@@ -44,7 +44,9 @@ static void show_storage(void)
 static bool check_storage(void)
 {
 	if(storage_check())
+	{
 		return true;
+	}
 	ui_warn("ERROR: Storage device not found, reinsert it and try again!\n");
 	return false;
 }
@@ -53,7 +55,7 @@ static bool check_storage(void)
 // returns false if something other than a GBA was found
 static bool connect_gba(void)
 {
-	u32 type;
+	u32  type;
 	bool redraw = true;
 	si_link_probe_start();
 	while((type = si_link_probe_poll()) == 0)
@@ -69,16 +71,20 @@ static bool connect_gba(void)
 		input_scan();
 		ui_frame();
 		u32 btns = input_down();
-		if(btns&INPUT_START)
+		if(btns & INPUT_START)
+		{
 			ui_exit();
-		else if(btns&INPUT_X)
+		}
+		else if(btns & INPUT_X)
 		{
 			settings_menu_run();
 			redraw = true;
 		}
 	}
 	if(!(type & SI_GBA))
+	{
 		return false;
+	}
 	ui_status("GBA Found! Waiting on BIOS\n");
 	multiboot_wait_bios();
 	ui_status("Ready, sending dumper\n");
@@ -92,11 +98,16 @@ static const char *command_name(u32 cmd)
 {
 	switch(cmd)
 	{
-		case GBA_CMD_DUMP_ROM:		return "Dump ROM";
-		case GBA_CMD_BACKUP_SAVE:	return "Back up save";
-		case GBA_CMD_RESTORE_SAVE:	return "Restore save";
-		case GBA_CMD_CLEAR_SAVE:	return "Clear save";
-		default:					return "Cancel";
+		case GBA_CMD_DUMP_ROM:
+			return "Dump ROM";
+		case GBA_CMD_BACKUP_SAVE:
+			return "Back up save";
+		case GBA_CMD_RESTORE_SAVE:
+			return "Restore save";
+		case GBA_CMD_CLEAR_SAVE:
+			return "Clear save";
+		default:
+			return "Cancel";
 	}
 }
 
@@ -117,20 +128,32 @@ static u32 choose_cart_command(const gba_cart_info *cart)
 				return req;
 			}
 		}
-		if(btns&INPUT_START)
+		if(btns & INPUT_START)
+		{
 			ui_exit();
-		else if(btns&INPUT_A)
+		}
+		else if(btns & INPUT_A)
+		{
 			return GBA_CMD_DUMP_ROM;
-		else if(btns&INPUT_B)
+		}
+		else if(btns & INPUT_B)
+		{
 			return GBA_CMD_NONE;
+		}
 		else if(cart->save_size > 0)
 		{
-			if(btns&INPUT_Y)
+			if(btns & INPUT_Y)
+			{
 				return GBA_CMD_BACKUP_SAVE;
-			else if(btns&INPUT_X)
+			}
+			else if(btns & INPUT_X)
+			{
 				return GBA_CMD_RESTORE_SAVE;
-			else if(btns&INPUT_Z)
+			}
+			else if(btns & INPUT_Z)
+			{
 				return GBA_CMD_CLEAR_SAVE;
+			}
 		}
 	}
 }
@@ -143,7 +166,7 @@ static void backup_save_name(char *out, size_t len, const gba_cart_info *cart)
 		paths_save_backup_file(out, len, cart, NULL);
 		return;
 	}
-	time_t now = time(NULL);
+	time_t    now = time(NULL);
 	struct tm when;
 	localtime_r(&now, &when);
 	paths_save_backup_file(out, len, cart, &when);
@@ -155,7 +178,9 @@ static u32 prepare_cart_command(u32 command, const gba_cart_info *cart,
 	char *gamename, char *savename, const char *restorename)
 {
 	if(command != GBA_CMD_NONE && command != GBA_CMD_CLEAR_SAVE && !check_storage())
+	{
 		return GBA_CMD_NONE;
+	}
 	paths_existing policy = settings_get()->existing;
 	if(command == GBA_CMD_DUMP_ROM)
 	{
@@ -194,10 +219,12 @@ static void dump_rom(const gba_cart_info *cart, const char *gamename)
 {
 	//create base file with size
 	ui_status("Preparing file...\n");
-	storage_create_file(gamename,cart->rom_size);
-	FILE *f = fopen(gamename,"wb");
+	storage_create_file(gamename, cart->rom_size);
+	FILE *f = fopen(gamename, "wb");
 	if(!f)
+	{
 		ui_fatal("ERROR: Could not create file! Exit...");
+	}
 	ui_status("Dumping...\n");
 	gba_dump_rom(cart->rom_size, dumpbuf, DUMP_BUF_SIZE, write_chunk, f, ui_rom_progress);
 	ui_status("\nClosing file\n");
@@ -210,10 +237,12 @@ static void backup_save(const gba_cart_info *cart, const char *savename)
 {
 	//create base file with size
 	ui_status("Preparing file...\n");
-	storage_create_file(savename,cart->save_size);
-	FILE *f = fopen(savename,"wb");
+	storage_create_file(savename, cart->save_size);
+	FILE *f = fopen(savename, "wb");
 	if(!f)
+	{
 		ui_fatal("ERROR: Could not create file! Exit...");
+	}
 	ui_status("Waiting for GBA\n");
 	ui_frame();
 	gba_wait_save_ready(cart->save_size);
@@ -221,7 +250,7 @@ static void backup_save(const gba_cart_info *cart, const char *savename)
 	ui_status("Receiving...\n");
 	gba_recv_save(dumpbuf, cart->save_size);
 	ui_status("Writing save...\n");
-	fwrite(dumpbuf,cart->save_size,1,f);
+	fwrite(dumpbuf, cart->save_size, 1, f);
 	fclose(f);
 	ui_status("Save backed up!\n");
 	sleep(5);
@@ -262,10 +291,12 @@ static void handle_cart(void)
 	backup_save_name(savename, sizeof(savename), &cart);
 	bool have_backup = cart.save_size > 0 && paths_find_latest_save(restorename, sizeof(restorename), &cart);
 	if(cart.save_size > 0)
+	{
 		ui_show_restore_file(have_backup ? restorename : NULL);
+	}
 	ui_show_cart_menu(&cart);
 	u32 command = choose_cart_command(&cart);
-	command = prepare_cart_command(command, &cart, gamename, savename, have_backup ? restorename : NULL);
+	command     = prepare_cart_command(command, &cart, gamename, savename, have_backup ? restorename : NULL);
 	gba_send_command(command);
 	//let gba prepare
 	sleep(1);
@@ -291,7 +322,9 @@ static void dump_bios(void)
 	char biosname[PATH_MAX];
 	paths_bios_file(biosname, sizeof(biosname));
 	if(!check_storage())
+	{
 		return;
+	}
 	if(!paths_resolve_existing(biosname, sizeof(biosname), settings_get()->existing))
 	{
 		ui_warn("ERROR: BIOS already backed up!\n");
@@ -299,15 +332,17 @@ static void dump_bios(void)
 	}
 	//create base file with size
 	ui_status("Preparing file...\n");
-	storage_create_file(biosname,GBA_BIOS_SIZE);
-	FILE *f = fopen(biosname,"wb");
+	storage_create_file(biosname, GBA_BIOS_SIZE);
+	FILE *f = fopen(biosname, "wb");
 	if(!f)
+	{
 		ui_fatal("ERROR: Could not create file! Exit...");
+	}
 	gba_start_bios_dump();
 	//lets go!
 	ui_status("Dumping...\n");
 	gba_recv_bios(dumpbuf);
-	fwrite(dumpbuf,GBA_BIOS_SIZE,1,f);
+	fwrite(dumpbuf, GBA_BIOS_SIZE, 1, f);
 	ui_status("Closing file\n");
 	fclose(f);
 	ui_status("BIOS dumped!\n");
@@ -325,28 +360,41 @@ static void run_menu(void)
 		input_scan();
 		ui_frame();
 		u32 btns = input_down();
-		u32 req = 0;
+		u32 req  = 0;
 		if(!btns && !gba_poll_request(&req))
+		{
 			req = 0;
-		if(btns&INPUT_START)
+		}
+		if(btns & INPUT_START)
+		{
 			ui_exit();
-		else if(btns&INPUT_X)
+		}
+		else if(btns & INPUT_X)
+		{
 			settings_menu_run();
-		else if((btns&INPUT_A) || req == GBA_REQ_READ_CART)
+		}
+		else if((btns & INPUT_A) || req == GBA_REQ_READ_CART)
 		{
 			if(gba_is_ready())
+			{
 				handle_cart();
+			}
 		}
-		else if((btns&INPUT_Y) || req == GBA_REQ_DUMP_BIOS)
+		else if((btns & INPUT_Y) || req == GBA_REQ_DUMP_BIOS)
+		{
 			dump_bios();
+		}
 	}
 }
 
 void app_run(int argc, char *argv[])
 {
 	si_link_init();
-	dumpbuf = memalign(32,DUMP_BUF_SIZE);
-	if(!dumpbuf) return;
+	dumpbuf = memalign(32, DUMP_BUF_SIZE);
+	if(!dumpbuf)
+	{
+		return;
+	}
 	if(!storage_init())
 	{
 		ui_clear();
@@ -368,6 +416,8 @@ void app_run(int argc, char *argv[])
 	while(1)
 	{
 		if(connect_gba())
+		{
 			run_menu();
+		}
 	}
 }

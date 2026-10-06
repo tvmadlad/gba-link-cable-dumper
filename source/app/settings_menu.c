@@ -31,17 +31,23 @@ static const char *existing_labels[] = { "Skip", "Overwrite", "Keep both" };
 
 static void device_label(char *out, size_t len, const settings_t *s)
 {
-	const storage_device *active = storage_active();
-	const char *active_name = active ? active->name : "none";
+	const storage_device *active      = storage_active();
+	const char           *active_name = active ? active->name : "none";
 	if(strcmp(s->device, STORAGE_AUTO) == 0)
+	{
 		snprintf(out, len, "Auto (%s)", active_name);
+	}
 	else
 	{
 		const storage_device *d = storage_find_device(s->device);
 		if(d && d->mounted)
+		{
 			snprintf(out, len, "%s", d->name);
+		}
 		else
+		{
 			snprintf(out, len, "%s (missing, using %s)", d ? d->name : s->device, active_name);
+		}
 	}
 }
 
@@ -55,15 +61,25 @@ static void cycle_device(settings_t *s, int dir)
 	for(i = 0; i < count; i++)
 	{
 		if(strcmp(storage_device_at(i)->id, s->device) == 0)
+		{
 			cur = i;
+		}
 	}
 	for(i = 0; i <= count; i++)
 	{
 		cur += dir;
-		if(cur >= count) cur = -1;
-		if(cur < -1) cur = count-1;
+		if(cur >= count)
+		{
+			cur = -1;
+		}
+		if(cur < -1)
+		{
+			cur = count - 1;
+		}
 		if(cur == -1 || storage_device_at(cur)->mounted)
+		{
 			break;
+		}
 	}
 	snprintf(s->device, sizeof(s->device), "%s", cur == -1 ? STORAGE_AUTO : storage_device_at(cur)->id);
 }
@@ -72,13 +88,17 @@ static void choose_dump_dir(settings_t *s)
 {
 	const storage_device *d = storage_active();
 	if(!d)
+	{
 		return;
+	}
 	char picked[PATH_MAX];
 	if(!folder_browser_run("Choose the output folder", paths_dump_dir(), false, picked, sizeof(picked)))
+	{
 		return;
+	}
 	//store without the device, the device is its own setting
 	const char *colon = strchr(picked, ':');
-	const char *dir = colon ? colon+1 : picked;
+	const char *dir   = colon ? colon + 1 : picked;
 	snprintf(s->dump_dir, sizeof(s->dump_dir), "%s", *dir ? dir : "/");
 }
 
@@ -88,21 +108,27 @@ static void choose_settings_location(void)
 	snprintf(start, sizeof(start), "%s", settings_file());
 	char *slash = strrchr(start, '/');
 	if(slash)
+	{
 		*slash = '\0';
+	}
 	char picked[PATH_MAX];
 	if(!folder_browser_run("Choose where settings.ini is stored", start, true, picked, sizeof(picked)))
+	{
 		return;
+	}
 	if(!settings_move(picked))
-		ui_warn("ERROR: Could not write the settings file there!");
+	{
+		ui_warn("ERROR: Could not move the settings file there!");
+	}
 }
 
 void settings_menu_run(void)
 {
-	settings_t *s = settings_get();
-	bool dirty = false;
-	bool redraw = true;
-	int cursor = 0;
-	char device[96], split[8], settings_path[PATH_MAX];
+	settings_t  *s      = settings_get();
+	bool         dirty  = false;
+	bool         redraw = true;
+	int          cursor = 0;
+	char         device[96], split[8], settings_path[PATH_MAX];
 	ui_menu_item items[ITEM_COUNT];
 	while(1)
 	{
@@ -111,13 +137,13 @@ void settings_menu_run(void)
 			device_label(device, sizeof(device), s);
 			snprintf(split, sizeof(split), "%s", s->split_folders ? "On" : "Off");
 			snprintf(settings_path, sizeof(settings_path), "%s", settings_file());
-			items[ITEM_DEVICE] = (ui_menu_item){ "Storage device", device };
-			items[ITEM_DUMP_DIR] = (ui_menu_item){ "Output folder", paths_dump_dir() };
-			items[ITEM_SPLIT] = (ui_menu_item){ "ROMs/Saves/BIOS subfolders", split };
-			items[ITEM_EXISTING] = (ui_menu_item){ "If a file already exists", existing_labels[s->existing] };
-			items[ITEM_SAVE_NAMES] = (ui_menu_item){ "Save backup names", s->timestamp_saves ? "Date and time" : "Plain" };
+			items[ITEM_DEVICE]        = (ui_menu_item){ "Storage device", device };
+			items[ITEM_DUMP_DIR]      = (ui_menu_item){ "Output folder", paths_dump_dir() };
+			items[ITEM_SPLIT]         = (ui_menu_item){ "ROMs/Saves/BIOS subfolders", split };
+			items[ITEM_EXISTING]      = (ui_menu_item){ "If a file already exists", existing_labels[s->existing] };
+			items[ITEM_SAVE_NAMES]    = (ui_menu_item){ "Save backup names", s->timestamp_saves ? "Date and time" : "Plain" };
 			items[ITEM_SETTINGS_FILE] = (ui_menu_item){ "Settings file", settings_path };
-			items[ITEM_BACK] = (ui_menu_item){ "Save and go back", NULL };
+			items[ITEM_BACK]          = (ui_menu_item){ "Save and go back", NULL };
 			ui_draw_menu("Settings", items, ITEM_COUNT, cursor,
 				"A/Right: change  Left: change back  B: save and go back");
 			redraw = false;
@@ -125,15 +151,23 @@ void settings_menu_run(void)
 		input_scan();
 		ui_frame();
 		u32 btns = input_down();
-		int dir = (btns & INPUT_LEFT) ? -1 : ((btns & (INPUT_A|INPUT_RIGHT)) ? 1 : 0);
+		int dir  = (btns & INPUT_LEFT) ? -1 : ((btns & (INPUT_A | INPUT_RIGHT)) ? 1 : 0);
 		if(btns & INPUT_START)
+		{
 			ui_exit();
+		}
 		else if(btns & INPUT_B)
+		{
 			break;
+		}
 		else if(btns & INPUT_UP)
+		{
 			cursor = (cursor + ITEM_COUNT - 1) % ITEM_COUNT;
+		}
 		else if(btns & INPUT_DOWN)
+		{
 			cursor = (cursor + 1) % ITEM_COUNT;
+		}
 		else if(dir != 0)
 		{
 			switch(cursor)
@@ -143,7 +177,9 @@ void settings_menu_run(void)
 					break;
 				case ITEM_DUMP_DIR:
 					if(btns & INPUT_A)
+					{
 						choose_dump_dir(s);
+					}
 					break;
 				case ITEM_SPLIT:
 					s->split_folders = !s->split_folders;
@@ -156,11 +192,15 @@ void settings_menu_run(void)
 					break;
 				case ITEM_SETTINGS_FILE:
 					if(btns & INPUT_A)
+					{
 						choose_settings_location();
+					}
 					break;
 				case ITEM_BACK:
 					if(btns & INPUT_A)
+					{
 						goto done;
+					}
 					break;
 			}
 			dirty = true;
@@ -168,13 +208,19 @@ void settings_menu_run(void)
 			settings_apply();
 		}
 		else
+		{
 			continue;
+		}
 		redraw = true;
 	}
 done:
 	settings_apply();
 	if(dirty && !settings_save())
+	{
 		ui_warn("ERROR: Could not save settings!");
+	}
 	if(!paths_create_dirs())
+	{
 		ui_warn("ERROR: Could not create the output folder!");
+	}
 }

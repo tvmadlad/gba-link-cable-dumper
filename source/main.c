@@ -8,7 +8,7 @@
 #include "ui/ui.h"
 #include "ui/input.h"
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 	ui_init();
 	input_init();

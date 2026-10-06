@@ -13,16 +13,17 @@ Planned work is in [docs/ROADMAP.md](docs/ROADMAP.md). Update its status markers
 ./build.sh gc       # GameCube only
 ./build.sh wii      # Wii only
 ./build.sh clean
-make test           # host tests (settings, ini, paths, storage, GBA progress bar) with the normal Mac compiler
+make test           # host tests (settings, ini, paths, storage on GC and Wii, multiboot, GBA progress bar and save types) with the normal Mac compiler
 make screens        # render the GBA payload screens to tests/build/screens/*.png (check layout after GBA UI changes)
+make format         # format every C file with clang-format 23 (.clang-format); make format-check only checks
 ```
 
 - The toolchain is in `/opt/devkitpro` (devkitPPC r47, libogc 2.13, devkitARM r66). `build.sh` sets `DEVKITPRO`/`DEVKITPPC`/`DEVKITARM` if they're unset.
 - `data/` is generated. The top-level `Makefile` copies the GBA payload there, and bin2o turns it into `build_*/gba_mb_gba.h`.
 - GC and Wii use separate build dirs (`build_gc/`, `build_wii/`). New source subdirectories must be added to `SOURCES` in **both** `Makefile.gc` and `Makefile.wii`. Object files are named by basename, so **source file names must be unique across directories**.
-- A change is done when `./build.sh` passes with **no warnings** on both platforms and `make test` passes.
+- A change is done when `./build.sh` passes with **no warnings** on both platforms, `make test` passes and `make format-check` passes.
 - CI (`.github/workflows/build.yml`, GitHub Actions) runs `make test` and builds both dols on every push and pull request, and fails on any warning. Its devkitPro Docker images are pinned to the toolchain above, so bump their tags whenever the local toolchain is updated.
-- Host tests in `tests/` compile the real sources against stub libogc headers in `tests/stub/`. Device roots like `sd2:/` are plain folders in a temp dir, which works on macOS/Linux. Add tests there for any new code that doesn't need hardware, and keep such code free of libogc-only calls where practical.
+- Host tests in `tests/` compile the real sources against stub libogc headers in `tests/stub/`. They use Unity (`tests/unity/`, v2.7.0, kept as released and left out of `make format`): each behaviour is a `static void test_...(void)` with `TEST_ASSERT_*` checks, run from `main()` with `RUN_TEST()`, and `setUp()`/`tearDown()` run around every test so each one sets up its own state. A new test file needs a target in `tests/Makefile` that also compiles `unity/unity.c`. Device roots like `sd2:/` are plain folders in a temp dir, which works on macOS/Linux. Fakes stand in for hardware where the logic is worth testing: the stub drivers' present flags insert and pull cards, a fake SI link plays the GBA BIOS for multiboot, and GBA logic that only needs ROM data lives in its own file (`gba/source/savetype.c`). Add tests there for any new code that doesn't need hardware, and keep such code free of libogc-only calls where practical. The tests should also pass under `-fsanitize=address,undefined`.
 - There's no hardware or emulator testing here. The GBA link cable can't be emulated, so say clearly that a change is untested on hardware. When refactoring the GBA side, compare `gba/gba_mb.gba` against the previous build to confirm it's byte-identical when no behaviour change is intended.
 
 - Versioning: bump `VERSION_MINOR` (or `VERSION_MAJOR`) in `common/version.h` only. The code builds `APP_VERSION` ("v1.7") from it and the Makefiles read it for the output file names. Keep the two `#define VERSION_*` lines in that exact form, since the Makefiles and CI parse them with `sed`. Releases are only published from tags: pushing a `v<major>.<minor>` tag that matches `common/version.h` makes CI build that commit and publish the release with both dols. Pushes to master only build and test.
@@ -57,7 +58,9 @@ gba/source/         GBA payload (main.c) and libSave (save chip access)
 
 ## Code style
 
-- C, tabs for indentation, braces on their own line, `lower_snake_case` for new functions, prefixed by module (`gba_`, `si_link_`, `storage_`, `paths_`, `ui_`, `input_`)
+- C, `lower_snake_case` for new functions, prefixed by module (`gba_`, `si_link_`, `storage_`, `paths_`, `ui_`, `input_`)
+- Formatting is clang-format 23 with the repo's `.clang-format`, run `make format` before committing (it skips the third-party `tests/unity/`). It indents with tabs and aligns with spaces, puts every brace on its own line, adds braces to every `if`/`else`/`for`/`while` body, keeps nothing squeezed onto one line, and lines up neighbouring defines, declarations, assignments, trailing comments and table rows. Install it with `pip install clang-format==23.1.3`; other versions can format differently.
+- clang-format can't brace an empty loop body, so write busy-waits as `while(cond) {}` (`make format-check` rejects a lone `;`). It also can't move a data table's opening brace onto its own line, so that one stays after the `=`.
 - Every source file starts with the MIT license header. Files containing FIX94's original code keep "Copyright (C) 2016 FIX94"; files written from scratch in this fork use "Copyright (C) 2026 tvmadlad" (see e.g. `source/settings/settings.c`). Don't change the owner of files derived from FIX94's code.
 - Header guards look like `__MODULE_H__`
 - Short `//` comments, only where the reason isn't obvious

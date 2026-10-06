@@ -22,23 +22,22 @@
 
 typedef struct
 {
-	storage_device dev;
+	storage_device        dev;
 	const DISC_INTERFACE *iface;
 } storage_slot;
 
 // in auto selection order
-static storage_slot slots[] =
-{
+static storage_slot slots[] = {
 #ifdef HW_RVL
-	{ { "sd",  "Wii SD Slot",     false }, &__io_wiisd },
-	{ { "usb", "USB Storage",     false }, &__io_usbstorage },
+	{ { "sd", "Wii SD Slot", false },      &__io_wiisd      },
+	{ { "usb", "USB Storage", false },     &__io_usbstorage },
 #else
-	{ { "sd2", "SD2SP2",          false }, &__io_gcsd2 },
+	{ { "sd2", "SD2SP2", false }, &__io_gcsd2 },
 #endif
-	{ { "sda", "SD Gecko Slot A", false }, &__io_gcsda },
-	{ { "sdb", "SD Gecko Slot B", false }, &__io_gcsdb },
+	{ { "sda", "SD Gecko Slot A", false }, &__io_gcsda      },
+	{ { "sdb", "SD Gecko Slot B", false }, &__io_gcsdb      },
 };
-#define SLOT_COUNT (int)(sizeof(slots)/sizeof(slots[0]))
+#define SLOT_COUNT (int)(sizeof(slots) / sizeof(slots[0]))
 
 static storage_slot *active = NULL;
 
@@ -46,7 +45,9 @@ static bool mount_slot(storage_slot *s)
 {
 	s->dev.mounted = false;
 	if(!s->iface->startup() || !s->iface->isInserted())
+	{
 		return false;
+	}
 	s->dev.mounted = fatMountSimple(s->dev.id, s->iface);
 	return s->dev.mounted;
 }
@@ -57,17 +58,21 @@ static storage_slot *find_slot(const char *id)
 	for(i = 0; i < SLOT_COUNT; i++)
 	{
 		if(strcmp(slots[i].dev.id, id) == 0)
+		{
 			return &slots[i];
+		}
 	}
 	return NULL;
 }
 
 bool storage_init(void)
 {
-	int i;
+	int  i;
 	bool any = false;
 	for(i = 0; i < SLOT_COUNT; i++)
+	{
 		any |= mount_slot(&slots[i]);
+	}
 	storage_select(STORAGE_AUTO);
 	return any;
 }
@@ -80,7 +85,9 @@ int storage_device_count(void)
 const storage_device *storage_device_at(int index)
 {
 	if(index < 0 || index >= SLOT_COUNT)
+	{
 		return NULL;
+	}
 	return &slots[index].dev;
 }
 
@@ -119,11 +126,19 @@ const storage_device *storage_active(void)
 bool storage_check(void)
 {
 	if(!active)
+	{
 		return false;
-	if(active->iface->isInserted())
+	}
+	if(active->dev.mounted && active->iface->isInserted())
+	{
 		return true;
-	//card was pulled, try again in case it got reinserted
-	fatUnmount(active->dev.id);
+	}
+	//card was pulled, now or at an earlier check that unmounted it,
+	//mount it again in case it's back
+	if(active->dev.mounted)
+	{
+		fatUnmount(active->dev.id);
+	}
 	return mount_slot(active);
 }
 
@@ -141,23 +156,29 @@ bool storage_dir_exists(const char *path)
 
 bool storage_mkdirs(const char *path)
 {
-	char tmp[PATH_MAX];
+	char   tmp[PATH_MAX];
 	size_t len = strlen(path);
 	if(len == 0 || len >= sizeof(tmp))
+	{
 		return false;
+	}
 	strcpy(tmp, path);
 	//strip trailing slash
-	if(len > 1 && tmp[len-1] == '/' && tmp[len-2] != ':')
-		tmp[len-1] = '\0';
+	if(len > 1 && tmp[len - 1] == '/' && tmp[len - 2] != ':')
+	{
+		tmp[len - 1] = '\0';
+	}
 	char *p;
-	for(p = tmp+1; *p; p++)
+	for(p = tmp + 1; *p; p++)
 	{
 		if(*p == '/')
 		{
 			*p = '\0';
 			//skip device roots like "sd:"
 			if(p[-1] != ':')
+			{
 				mkdir(tmp, 0777);
+			}
 			*p = '/';
 		}
 	}
@@ -167,7 +188,7 @@ bool storage_mkdirs(const char *path)
 
 bool storage_file_exists(const char *path)
 {
-	FILE *f = fopen(path,"rb");
+	FILE *f = fopen(path, "rb");
 	if(f)
 	{
 		fclose(f);
@@ -178,7 +199,7 @@ bool storage_file_exists(const char *path)
 
 void storage_create_file(const char *path, size_t size)
 {
-	int fd = open(path, O_WRONLY|O_CREAT, 0666);
+	int fd = open(path, O_WRONLY | O_CREAT, 0666);
 	if(fd >= 0)
 	{
 		ftruncate(fd, size);
@@ -188,15 +209,17 @@ void storage_create_file(const char *path, size_t size)
 
 long storage_read_file(const char *path, void *buf, size_t expected_size)
 {
-	FILE *f = fopen(path,"rb");
+	FILE *f = fopen(path, "rb");
 	if(!f)
+	{
 		return -1;
-	fseek(f,0,SEEK_END);
+	}
+	fseek(f, 0, SEEK_END);
 	long readsize = ftell(f);
 	if(readsize == (long)expected_size)
 	{
 		rewind(f);
-		fread(buf,readsize,1,f);
+		fread(buf, readsize, 1, f);
 	}
 	fclose(f);
 	return readsize;
@@ -206,16 +229,22 @@ bool storage_list_files(const char *path, storage_file_cb cb, void *user)
 {
 	DIR *dir = opendir(path);
 	if(!dir)
+	{
 		return false;
+	}
 	struct dirent *ent;
-	char full[PATH_MAX];
+	char           full[PATH_MAX];
 	while((ent = readdir(dir)) != NULL)
 	{
 		if(ent->d_type != DT_REG)
+		{
 			continue;
+		}
 		int n = snprintf(full, sizeof(full), "%s/%s", path, ent->d_name);
 		if(n < 0 || (size_t)n >= sizeof(full))
+		{
 			continue;
+		}
 		struct stat st;
 		cb(ent->d_name, stat(full, &st) == 0 ? st.st_mtime : 0, user);
 	}
@@ -227,14 +256,20 @@ bool storage_list_dirs(const char *path, storage_dir_cb cb, void *user)
 {
 	DIR *dir = opendir(path);
 	if(!dir)
+	{
 		return false;
+	}
 	struct dirent *ent;
 	while((ent = readdir(dir)) != NULL)
 	{
 		if(ent->d_type != DT_DIR)
+		{
 			continue;
+		}
 		if(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+		{
 			continue;
+		}
 		cb(ent->d_name, user);
 	}
 	closedir(dir);

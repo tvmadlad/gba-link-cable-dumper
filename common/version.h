@@ -13,7 +13,7 @@
 #define VERSION_MINOR 1
 
 #define VERSION_STR_(x) #x
-#define VERSION_STR(x) VERSION_STR_(x)
+#define VERSION_STR(x)  VERSION_STR_(x)
 // "v1.7"
 #define APP_VERSION "v" VERSION_STR(VERSION_MAJOR) "." VERSION_STR(VERSION_MINOR)
 

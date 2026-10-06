@@ -1,0 +1,67 @@
+# Code format, applied with clang-format 23 (pip install clang-format==23.1.3).
+# Run "make format" before committing, "make format-check" lists files that
+# aren't formatted. See "Code style" in CLAUDE.md.
+Language: Cpp
+BasedOnStyle: LLVM
+
+# tabs (4 wide) for indentation, spaces for alignment so it lines up with
+# any tab width; no line length limit, so line breaks stay where they were
+# written
+UseTab: AlignWithSpaces
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 0
+
+# braces around every body, each brace on its own line, nothing squeezed
+# onto one line
+BreakBeforeBraces: Allman
+InsertBraces: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine:
+  Empty: false
+  Inline: false
+  Other: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseExpressionOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortRecordOnASingleLine: Never
+
+# neighbouring defines, declarations and assignments line up, a blank line
+# starts a new group; function prototypes keep their own spacing
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AlignFunctionDeclarations: false
+AlignConsecutiveAssignments: Consecutive
+AlignTrailingComments:
+  Kind: Always
+AlignAfterOpenBracket: false
+AlignOperands: DontAlign
+AlignEscapedNewlines: Left
+
+# data tables: rows next to each other line up in columns; clang-format
+# has no way to put a table's opening brace on its own line, so it stays
+# after the "="
+AlignArrayOfStructures: Left
+Cpp11BracedListStyle: Block
+
+# "if(x)", "f(x)", "char *p", "(u32)x", "{ 1, 2 }", case labels indented
+SpaceBeforeParens: Never
+PointerAlignment: Right
+SpaceAfterCStyleCast: false
+IndentCaseLabels: true
+IndentGotoLabels: NoIndent
+
+# comments, the order of includes and blank lines are left alone
+ReflowComments: Never
+SortIncludes:
+  Enabled: false
+SpacesInLineCommentPrefix:
+  Minimum: 0
+  Maximum: -1
+MaxEmptyLinesToKeep: 1
+InsertNewlineAtEOF: true
+LineEnding: LF

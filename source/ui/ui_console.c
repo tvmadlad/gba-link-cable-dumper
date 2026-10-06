@@ -17,17 +17,20 @@
 
 void ui_init(void)
 {
-	void *xfb = NULL;
+	void       *xfb   = NULL;
 	GXRModeObj *rmode = NULL;
 	VIDEO_Init();
 	rmode = VIDEO_GetPreferredMode(NULL);
-	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
+	xfb   = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
 	VIDEO_Configure(rmode);
 	VIDEO_SetNextFramebuffer(xfb);
 	VIDEO_SetBlack(FALSE);
 	VIDEO_Flush();
 	VIDEO_WaitVSync();
-	if(rmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
+	if(rmode->viTVMode & VI_NON_INTERLACE)
+	{
+		VIDEO_WaitVSync();
+	}
 	int x = 24, y = 32, w, h;
 	w = rmode->fbWidth - (32);
 	h = rmode->xfbHeight - (48);
@@ -92,9 +95,15 @@ void ui_draw_menu(const char *title, const ui_menu_item *items, int count, int c
 	int first = 0;
 	if(count > MENU_ROWS)
 	{
-		first = cursor - MENU_ROWS/2;
-		if(first < 0) first = 0;
-		if(first > count - MENU_ROWS) first = count - MENU_ROWS;
+		first = cursor - MENU_ROWS / 2;
+		if(first < 0)
+		{
+			first = 0;
+		}
+		if(first > count - MENU_ROWS)
+		{
+			first = count - MENU_ROWS;
+		}
 	}
 	printf(first > 0 ? "   ...\n" : " \n");
 	int i;
@@ -103,14 +112,20 @@ void ui_draw_menu(const char *title, const ui_menu_item *items, int count, int c
 		//highlight the cursor line in yellow
 		printf(i == cursor ? "\x1b[33m > " : "   ");
 		if(items[i].value)
+		{
 			printf("%s: %s", items[i].label, items[i].value);
+		}
 		else
+		{
 			printf("%s", items[i].label);
+		}
 		printf(i == cursor ? "\x1b[37m\n" : "\n");
 	}
 	printf(i < count ? "   ...\n" : " \n");
 	if(help)
+	{
 		printf(" \n%s\n", help);
+	}
 }
 
 void ui_show_storage(const char *device_name, const char *dump_dir)
@@ -133,14 +148,18 @@ void ui_show_main_menu(void)
 
 void ui_show_cart_info(const gba_cart_info *cart)
 {
-	printf("Game Name: %.12s\n",GBA_CART_TITLE(cart));
-	printf("Game ID: %.4s\n",GBA_CART_GAME_CODE(cart));
-	printf("Company ID: %.2s\n",GBA_CART_MAKER_CODE(cart));
-	printf("ROM Size: %02.02f MB\n",((float)(cart->rom_size/1024))/1024.f);
+	printf("Game Name: %.12s\n", GBA_CART_TITLE(cart));
+	printf("Game ID: %.4s\n", GBA_CART_GAME_CODE(cart));
+	printf("Company ID: %.2s\n", GBA_CART_MAKER_CODE(cart));
+	printf("ROM Size: %02.02f MB\n", ((float)(cart->rom_size / 1024)) / 1024.f);
 	if(cart->save_size > 0)
-		printf("Save Size: %02.02f KB\n \n",((float)(cart->save_size))/1024.f);
+	{
+		printf("Save Size: %02.02f KB\n \n", ((float)(cart->save_size)) / 1024.f);
+	}
 	else
+	{
 		printf("No Save File\n \n");
+	}
 }
 
 void ui_show_restore_file(const char *path)
@@ -149,15 +168,17 @@ void ui_show_restore_file(const char *path)
 	{
 		//just the file name, the folder is shown at the top
 		const char *name = strrchr(path, '/');
-		printf("Restore uses: %s\n \n", name ? name+1 : path);
+		printf("Restore uses: %s\n \n", name ? name + 1 : path);
 	}
 	else
+	{
 		printf("No save backup to restore yet.\n \n");
+	}
 }
 
 void ui_show_cart_menu(const gba_cart_info *cart)
 {
-	printf("Press A to dump this game, it will take about %i minutes.\n",cart->rom_size/1024/1024*3/2);
+	printf("Press A to dump this game, it will take about %i minutes.\n", cart->rom_size / 1024 / 1024 * 3 / 2);
 	printf("Press B if you want to cancel dumping this game.\n");
 	if(cart->save_size > 0)
 	{
@@ -166,10 +187,12 @@ void ui_show_cart_menu(const gba_cart_info *cart)
 		printf("Press Z to clear the save file on the GBA Cartridge.\n\n");
 	}
 	else
+	{
 		printf("\n");
+	}
 }
 
 void ui_rom_progress(u32 bytes_done, u32 bytes_total)
 {
-	printf("\r%02.02f MB done",(float)(bytes_done/1024)/1024.f);
+	printf("\r%02.02f MB done", (float)(bytes_done / 1024) / 1024.f);
 }

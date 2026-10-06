@@ -15,14 +15,14 @@
 
 typedef struct
 {
-	s32 rom_size;	// -1 when no (valid) cart is inserted
-	u32 save_size;	// 0 when the cart has no save
-	u8 header[GBA_HEADER_SIZE];
+	s32 rom_size;  // -1 when no (valid) cart is inserted
+	u32 save_size; // 0 when the cart has no save
+	u8  header[GBA_HEADER_SIZE];
 } gba_cart_info;
 
-#define GBA_CART_TITLE(c)		((const char*)((c)->header+0xA0))	// 12 chars, not terminated
-#define GBA_CART_GAME_CODE(c)	((const char*)((c)->header+0xAC))	// 4 chars, not terminated
-#define GBA_CART_MAKER_CODE(c)	((const char*)((c)->header+0xB0))	// 2 chars, not terminated
+#define GBA_CART_TITLE(c)      ((const char *)((c)->header + 0xA0)) // 12 chars, not terminated
+#define GBA_CART_GAME_CODE(c)  ((const char *)((c)->header + 0xAC)) // 4 chars, not terminated
+#define GBA_CART_MAKER_CODE(c) ((const char *)((c)->header + 0xB0)) // 2 chars, not terminated
 
 // called every 64KB while dumping a ROM
 typedef void (*gba_progress_cb)(u32 bytes_done, u32 bytes_total);

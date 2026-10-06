@@ -20,11 +20,11 @@
 
 typedef struct
 {
-	char device[8];				// STORAGE_AUTO or a storage device id
-	char dump_dir[PATH_MAX];	// without the device, e.g. "/dumps"
-	bool split_folders;
+	char           device[8];          // STORAGE_AUTO or a storage device id
+	char           dump_dir[PATH_MAX]; // without the device, e.g. "/dumps"
+	bool           split_folders;
 	paths_existing existing;
-	bool timestamp_saves;		// date and time in save backup names
+	bool           timestamp_saves; // date and time in save backup names
 } settings_t;
 
 settings_t *settings_get(void);
@@ -40,7 +40,8 @@ bool settings_save(void);
 // full path of the settings file, where it will be saved if none exists yet
 const char *settings_file(void);
 // moves the settings file into dir (with device, e.g. "sd2:/cfg"),
-// leaving a pointer where it was found so the next startup follows it
+// leaving a pointer where it was found so the next startup follows it;
+// returns false if the file or a pointer couldn't be written
 bool settings_move(const char *dir);
 
 // pushes the settings into storage and paths

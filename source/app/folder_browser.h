@@ -14,5 +14,8 @@
 // allow_devices lets the user go above a device root and switch devices
 // returns false if cancelled, out is only written on success
 bool folder_browser_run(const char *title, const char *start, bool allow_devices, char *out, size_t len);
+// creates the first free "New Folder", "New Folder 2", ... in path and
+// changes path to it; returns false if that wasn't possible
+bool folder_browser_new_folder(char *path, size_t len);
 
 #endif

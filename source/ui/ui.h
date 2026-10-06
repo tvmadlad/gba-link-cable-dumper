@@ -20,7 +20,7 @@ void ui_frame(void);
 // clears the screen and draws the title
 void ui_clear(void);
 // status line, printf style
-void ui_status(const char *fmt, ...) __attribute__((format(printf,1,2)));
+void ui_status(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 // shows an error for a moment and returns
 void ui_warn(const char *msg);
 // shows an error and exits the app
@@ -31,7 +31,7 @@ void ui_exit(void) __attribute__((noreturn));
 typedef struct
 {
 	const char *label;
-	const char *value;	// shown after the label, may be NULL
+	const char *value; // shown after the label, may be NULL
 } ui_menu_item;
 
 // full screen list with the cursor item highlighted,

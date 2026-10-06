@@ -16,30 +16,43 @@
 static char *trim(char *s)
 {
 	while(isspace((unsigned char)*s))
+	{
 		s++;
+	}
 	char *end = s + strlen(s);
 	while(end > s && isspace((unsigned char)end[-1]))
+	{
 		end--;
+	}
 	*end = '\0';
 	return s;
 }
 
 void ini_parse_buffer(char *buf, ini_entry_cb cb, void *user)
 {
+	//Windows editors can start the file with a UTF-8 byte order mark
+	if((unsigned char)buf[0] == 0xEF && (unsigned char)buf[1] == 0xBB && (unsigned char)buf[2] == 0xBF)
+	{
+		buf += 3;
+	}
 	char *line = buf;
 	while(line && *line)
 	{
 		char *next = strpbrk(line, "\r\n");
 		if(next)
+		{
 			*next++ = '\0';
-		char *s = trim(line);
+		}
+		char *s  = trim(line);
 		char *eq = strchr(s, '=');
 		if(*s != ';' && *s != '#' && *s != '[' && eq)
 		{
-			*eq = '\0';
+			*eq       = '\0';
 			char *key = trim(s);
 			if(*key)
-				cb(key, trim(eq+1), user);
+			{
+				cb(key, trim(eq + 1), user);
+			}
 		}
 		line = next;
 	}
@@ -49,7 +62,9 @@ bool ini_parse_file(const char *path, ini_entry_cb cb, void *user)
 {
 	FILE *f = fopen(path, "rb");
 	if(!f)
+	{
 		return false;
+	}
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
 	rewind(f);
@@ -58,13 +73,13 @@ bool ini_parse_file(const char *path, ini_entry_cb cb, void *user)
 		fclose(f);
 		return false;
 	}
-	char *buf = malloc(size+1);
+	char *buf = malloc(size + 1);
 	if(!buf)
 	{
 		fclose(f);
 		return false;
 	}
-	size = fread(buf, 1, size, f);
+	size      = fread(buf, 1, size, f);
 	buf[size] = '\0';
 	fclose(f);
 	ini_parse_buffer(buf, cb, user);

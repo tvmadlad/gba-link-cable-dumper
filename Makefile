@@ -9,6 +9,8 @@
 #   make test     run the host tests (no devkitPro needed)
 #   make screens  render the GBA payload screens to tests/build/screens
 #   make dist     build both and package a release zip in dist/
+#   make format   format the C sources with clang-format 23 (see .clang-format)
+#   make format-check  fail if a C source isn't formatted
 #   make clean    remove all build output
 #---------------------------------------------------------------------------------
 export DEVKITPRO	?=	/opt/devkitpro
@@ -22,7 +24,7 @@ VERSION		:=	$(shell sed -n 's/^\#define VERSION_MAJOR //p' common/version.h).$(s
 DIST_NAME	:=	gba-link-cable-dumper-v$(VERSION)
 DIST_DIR	:=	dist/$(DIST_NAME)
 
-.PHONY: all gba gc wii test screens dist clean
+.PHONY: all gba gc wii test screens dist format format-check clean
 
 all: gc wii
 
@@ -56,6 +58,21 @@ dist: gc wii
 	@cp README.md LICENSE $(DIST_DIR)/
 	@cd dist && zip -qrX $(DIST_NAME).zip $(DIST_NAME)
 	@echo "dist/$(DIST_NAME).zip"
+
+# tests/unity is the Unity test framework, kept as released
+CLANG_FORMAT	?=	clang-format
+FORMAT_PATHS	=	'*.c' '*.h' ':!tests/unity'
+FORMAT_FILES	=	$(shell git ls-files $(FORMAT_PATHS))
+
+format:
+	@$(CLANG_FORMAT) -i $(FORMAT_FILES)
+
+# clang-format can't put braces around an empty loop body, which it leaves as
+# a lone ";" line, so that's checked here too
+format-check:
+	@$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_FILES)
+	@if git grep -n -E '^[[:space:]]*;[[:space:]]*$$' -- $(FORMAT_PATHS); then \
+		echo "write empty loop bodies as {}"; exit 1; fi
 
 clean:
 	@rm -rf dist

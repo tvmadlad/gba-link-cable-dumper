@@ -34,8 +34,8 @@ typedef struct
 	u32 total;
 	u32 cell_next, cell_step;
 	u32 pct_next, pct_step;
-	u8 cells;
-	u8 pct[3];	// hundreds, tens, ones
+	u8  cells;
+	u8  pct[3]; // hundreds, tens, ones
 } progress_t;
 
 void progress_start(progress_t *p, u32 total);
@@ -43,7 +43,9 @@ void progress_update_slow(progress_t *p, u32 done);
 static inline void progress_update(progress_t *p, u32 done)
 {
 	if(done >= p->cell_next || done >= p->pct_next)
+	{
 		progress_update_slow(p, done);
+	}
 }
 void progress_finish(progress_t *p);
 

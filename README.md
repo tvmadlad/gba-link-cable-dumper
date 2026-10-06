@@ -257,7 +257,16 @@ The build compiles the GBA payload first, copies it into `data/`, then embeds it
 make test
 ```
 
-Runs host tests for the settings, INI parser, paths and storage code, and for the GBA screen's progress bar maths, using your normal compiler. You don't need devkitPro or a console. The real source files are compiled against stub libogc headers in [`tests/stub`](tests/stub).
+Runs host tests using your normal compiler: the settings, INI parser, paths and the folder browser's new folders, the storage device tables of the GameCube and the Wii (including a card pulled and put back), the multiboot upload (every word sent is decrypted and checked), and on the GBA side the progress bar maths and the save type detection. You don't need devkitPro or a console. The real source files are compiled against stub libogc headers in [`tests/stub`](tests/stub), and the tests use the [Unity](https://github.com/ThrowTheSwitch/Unity) test framework, which is included in [`tests/unity`](tests/unity). Each test prints a PASS or FAIL line, and a failure shows the expected and actual values.
+
+### Formatting
+
+```bash
+make format         # format every C file
+make format-check   # only check, fails if something isn't formatted
+```
+
+The code is formatted with clang-format 23, using the settings in [`.clang-format`](.clang-format): tabs for indentation, braces on their own line around every body, and neighbouring defines, declarations and assignments lined up. Install it with `pip install clang-format==23.1.3`. Other versions can format differently.
 
 ### GBA screen previews
 
@@ -298,6 +307,7 @@ source/storage/paths       output folder, subfolders and file naming
 source/ui/ui.h             front end interface, implemented by ui_console.c
 source/ui/input.h          controller abstraction, implemented by input_pad.c
 tests/                     host tests with stub libogc headers
+  unity/                   Unity test framework (MIT), as released
 docs/ROADMAP.md            planned features
 ```
 
@@ -331,6 +341,7 @@ Issues and pull requests are welcome. Before opening a pull request:
 
 - make sure `./build.sh` builds both platforms with **no warnings**
 - make sure `make test` passes
+- run `make format` (clang-format 23) so `make format-check` passes
 - follow the code style and module rules in [CLAUDE.md](CLAUDE.md) (C, tabs, module-prefixed function names, no screen/input access from `link/` or `storage/`)
 - mention what you've tested on real hardware
 
@@ -340,6 +351,7 @@ Issues and pull requests are welcome. Before opening a pull request:
 - **Chishm**: SendSave, which the save support is based on
 - **Dark Fader**: GBA BIOS dumping method
 - **[devkitPro](https://devkitpro.org)**: devkitPPC, devkitARM, libogc, libgba and libfat
+- **[ThrowTheSwitch](https://github.com/ThrowTheSwitch/Unity)**: Unity, the test framework (MIT)
 - **tvmadlad**: this fork (build system, restructure, storage devices, SD2SP2, settings)
 
 ## License

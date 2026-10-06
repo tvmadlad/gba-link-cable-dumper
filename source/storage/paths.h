@@ -23,9 +23,9 @@ typedef enum
 
 typedef enum
 {
-	PATHS_EXISTING_SKIP,		// refuse to write, the original behaviour
+	PATHS_EXISTING_SKIP, // refuse to write, the original behaviour
 	PATHS_EXISTING_OVERWRITE,
-	PATHS_EXISTING_KEEP_BOTH,	// write "name (1).ext", "name (2).ext", ...
+	PATHS_EXISTING_KEEP_BOTH, // write "name (1).ext", "name (2).ext", ...
 } paths_existing;
 
 // folder all dumps are written to including the device, e.g. "sd2:/dumps"
@@ -38,21 +38,33 @@ void paths_kind_dir(char *out, size_t len, paths_kind kind);
 // creates the dump folder and any subfolders, returns false on failure
 bool paths_create_dirs(void);
 
+// the file names below return false and leave out empty when the path
+// doesn't fit, so a cut off path can't point somewhere else
+
 // "<kind dir>/<title> [<game code><maker code>]<ext>"
-void paths_cart_file(char *out, size_t len, const gba_cart_info *cart, paths_kind kind);
+bool paths_cart_file(char *out, size_t len, const gba_cart_info *cart, paths_kind kind);
 // save backup name, with when: "<saves dir>/<title> [<code>] 2026-09-29 18-45-12.sav"
 // without (NULL) the same as paths_cart_file
-void paths_save_backup_file(char *out, size_t len, const gba_cart_info *cart, const struct tm *when);
+bool paths_save_backup_file(char *out, size_t len, const gba_cart_info *cart, const struct tm *when);
 // finds the newest save backup of this cart by modification time, whatever
 // its name style (plain, timestamped or " (n)"), returns false if there is none
 bool paths_find_latest_save(char *out, size_t len, const gba_cart_info *cart);
-void paths_bios_file(char *out, size_t len);
+bool paths_bios_file(char *out, size_t len);
 
 // applies the policy to a path that is about to be written
-// returns false if nothing should be written, may change path for KEEP_BOTH
+// returns false if nothing should be written (also for an empty path, one
+// that didn't fit), may change path for KEEP_BOTH
 bool paths_resolve_existing(char *path, size_t len, paths_existing policy);
 
 // replaces characters that are invalid in FAT filenames with '_'
 void paths_sanitize_filename(char *str);
+
+// folders with their device, "sd2:/a/b"; "sd2:/" is the device root
+bool paths_is_device_root(const char *path);
+// "sd2:/a/b" -> "sd2:/a", "sd2:/a" -> "sd2:/", a device root stays as it is
+void paths_parent(char *path);
+// "sd2:/a" + "b" -> "sd2:/a/b", "sd2:/" + "b" -> "sd2:/b";
+// returns false and leaves path as it was if the result doesn't fit
+bool paths_join(char *path, size_t len, const char *name);
 
 #endif

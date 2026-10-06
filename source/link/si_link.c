@@ -16,7 +16,7 @@
 //safe si transfer delay in between calls
 #define SI_TRANS_DELAY 50
 
-static u8 *resbuf,*cmdbuf;
+static u8 *resbuf, *cmdbuf;
 
 static volatile u32 transval = 0;
 static void transcb(s32 chan, u32 ret)
@@ -32,14 +32,14 @@ static void acb(s32 res, u32 val)
 
 void si_link_init(void)
 {
-	cmdbuf = memalign(32,32);
-	resbuf = memalign(32,32);
+	cmdbuf = memalign(32, 32);
+	resbuf = memalign(32, 32);
 }
 
 void si_link_probe_start(void)
 {
 	resval = 0;
-	SI_GetTypeAsync(SI_LINK_CHAN,acb);
+	SI_GetTypeAsync(SI_LINK_CHAN, acb);
 }
 
 u32 si_link_probe_poll(void)
@@ -49,10 +49,12 @@ u32 si_link_probe_poll(void)
 		if(resval == 0x80 || resval & 8)
 		{
 			resval = 0;
-			SI_GetTypeAsync(SI_LINK_CHAN,acb);
+			SI_GetTypeAsync(SI_LINK_CHAN, acb);
 		}
 		else
+		{
 			return resval;
+		}
 	}
 	return 0;
 }
@@ -60,38 +62,49 @@ u32 si_link_probe_poll(void)
 void si_link_reset(void)
 {
 	cmdbuf[0] = 0xFF; //reset
-	transval = 0;
-	SI_Transfer(SI_LINK_CHAN,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
-	while(transval == 0) ;
+	transval  = 0;
+	SI_Transfer(SI_LINK_CHAN, cmdbuf, 1, resbuf, 3, transcb, SI_TRANS_DELAY);
+	while(transval == 0)
+	{
+	}
 }
 
 u8 si_link_status(void)
 {
 	//a failed transfer must not return an old status, e.g. with the GBA unplugged
-	memset(resbuf,0,32);
+	memset(resbuf, 0, 32);
 	cmdbuf[0] = 0; //status
-	transval = 0;
-	SI_Transfer(SI_LINK_CHAN,cmdbuf,1,resbuf,3,transcb,SI_TRANS_DELAY);
-	while(transval == 0) ;
+	transval  = 0;
+	SI_Transfer(SI_LINK_CHAN, cmdbuf, 1, resbuf, 3, transcb, SI_TRANS_DELAY);
+	while(transval == 0)
+	{
+	}
 	return resbuf[2];
 }
 
 u32 si_link_recv(void)
 {
-	memset(resbuf,0,32);
-	cmdbuf[0]=0x14; //read
-	transval = 0;
-	SI_Transfer(SI_LINK_CHAN,cmdbuf,1,resbuf,5,transcb,SI_TRANS_DELAY);
-	while(transval == 0) ;
-	return *(vu32*)resbuf;
+	memset(resbuf, 0, 32);
+	cmdbuf[0] = 0x14; //read
+	transval  = 0;
+	SI_Transfer(SI_LINK_CHAN, cmdbuf, 1, resbuf, 5, transcb, SI_TRANS_DELAY);
+	while(transval == 0)
+	{
+	}
+	return *(vu32 *)resbuf;
 }
 
 void si_link_send(u32 msg)
 {
-	cmdbuf[0]=0x15;cmdbuf[1]=(msg>>0)&0xFF;cmdbuf[2]=(msg>>8)&0xFF;
-	cmdbuf[3]=(msg>>16)&0xFF;cmdbuf[4]=(msg>>24)&0xFF;
-	transval = 0;
+	cmdbuf[0] = 0x15;
+	cmdbuf[1] = (msg >> 0) & 0xFF;
+	cmdbuf[2] = (msg >> 8) & 0xFF;
+	cmdbuf[3] = (msg >> 16) & 0xFF;
+	cmdbuf[4] = (msg >> 24) & 0xFF;
+	transval  = 0;
 	resbuf[0] = 0;
-	SI_Transfer(SI_LINK_CHAN,cmdbuf,5,resbuf,1,transcb,SI_TRANS_DELAY);
-	while(transval == 0) ;
+	SI_Transfer(SI_LINK_CHAN, cmdbuf, 5, resbuf, 1, transcb, SI_TRANS_DELAY);
+	while(transval == 0)
+	{
+	}
 }
